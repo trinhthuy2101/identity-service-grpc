@@ -1,4 +1,4 @@
-module ecommerce/customer
+module ecommerce/identity
 
 go 1.18
 
@@ -22,9 +22,14 @@ require (
 )
 
 require (
+	github.com/golang-jwt/jwt/v4 v4.4.3 // indirect
+	github.com/google/subcommands v1.0.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/kelseyhightower/envconfig v1.4.0 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	google.golang.org/genproto v0.0.0-20220805133916-01dd62135a58 // indirect
 )
 

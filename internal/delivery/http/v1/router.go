@@ -4,9 +4,9 @@ package v1
 import (
 	"github.com/gin-gonic/gin"
 
-	"ecommerce/customer/internal/usecase"
+	"ecommerce/identity/internal/usecase"
 )
 
-func RegisterRouter(handler *gin.RouterGroup, t usecase.Customer) {
-	newCustomerRoutes(handler, t)
+func RegisterRouter(handler *gin.RouterGroup, t usecase.AuthUsecase) {
+	newIdentityRoutes(handler, t)
 }

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"ecommerce/customer/cmd"
-	_ "ecommerce/customer/docs"
+	"ecommerce/identity/cmd"
+	_ "ecommerce/identity/docs"
 )
 
 func main() {

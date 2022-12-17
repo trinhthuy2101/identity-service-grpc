@@ -6,8 +6,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"ecommerce/customer/internal/di"
-	"ecommerce/customer/pkg/logger"
+	"ecommerce/identity/internal/di"
+	"ecommerce/identity/pkg/logger"
 )
 
 func RunHTTPServer() {

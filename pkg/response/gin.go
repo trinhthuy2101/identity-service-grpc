@@ -65,3 +65,9 @@ func Failure(err error) *Response {
 		Message: err.Error(),
 	}
 }
+func BadRequest() *Response {
+	return &Response{
+		Status:  http.StatusBadRequest,
+		Message: "Invalid Request",
+	}
+}

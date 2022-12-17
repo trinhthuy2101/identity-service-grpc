@@ -2,69 +2,77 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/spf13/cast"
 
-	"ecommerce/customer/internal/usecase"
-	"ecommerce/customer/pkg/errors"
-	"ecommerce/customer/pkg/logger"
-	"ecommerce/customer/pkg/response"
+	"ecommerce/identity/internal/entity"
+	"ecommerce/identity/internal/usecase"
+	"ecommerce/identity/pkg/errors"
+	"ecommerce/identity/pkg/logger"
+	"ecommerce/identity/pkg/response"
 )
 
-type customerRoutes struct {
-	t usecase.Customer
+type identityRoutes struct {
+	u usecase.AuthUsecase
 }
 
-func newCustomerRoutes(handler *gin.RouterGroup, t usecase.Customer) {
-	r := &customerRoutes{t}
+func newIdentityRoutes(handler *gin.RouterGroup, t usecase.AuthUsecase) {
+	r := &identityRoutes{t}
 
-	h := handler.Group("/customers")
+	h := handler.Group("/auth")
 	{
-		h.GET("/", response.GinWrap(r.collection))
-		h.GET("/:id", response.GinWrap(r.get))
+		h.GET("/", response.GinWrap(r.login))
+		h.GET("/:id", response.GinWrap(r.register))
 	}
 }
 
-// @Summary     Get customers
-// @Description Customer collection
-// @Tags  	    Customer
+// @Summary     login
+// @Description login
+// @Tags  	    Identity
 // @Accept      json
 // @Produce     json
-// @Success     200 {object} response.Response{data=response.Collection{results=[]entity.Customer}}
+// @Success     200 {object} response.Response{data=response.Collection{results=[]entity.AdminUser}}
 // @Failure     500 {object} response.FailureResponse
-// @Router      /v1/customers [get]
-func (r *customerRoutes) collection(c *gin.Context) *response.Response {
-	customers, count, err := r.t.Collection(c.Request.Context())
+// @Router      /v1/login [post]
+func (r *identityRoutes) login(c *gin.Context) *response.Response {
+	var request AuthenRequest
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		return response.BadRequest()
+	}
+
+	adminUser, token, err := r.u.Login(c.Request.Context(), &entity.AdminUser{Email: request.Email, Password: request.Password})
 	if err != nil {
-		logger.Error("failed to get collection. Error %w", err)
+		logger.Error("failed to login. Error %w", err)
 
 		return response.Failure(err)
 	}
 
-	return response.SuccessWithCollection(
-		customers,
-		&response.Pagination{
-			TotalRecords: count,
-		})
+	return response.SuccessWithData(
+		&loginResponse{
+			ID:       adminUser.ID,
+			Email:    adminUser.Email,
+			Token:    token,
+			FullName: adminUser.FullName,
+			Address:  adminUser.Address,
+		},
+	)
 }
 
-// @Summary     Get customer
-// @Description Get customer by id
-// @Tags  	    Customer
+// @Summary     Register
+// @Description Regisetr
+// @Tags  	    Identity
 // @Accept      json
 // @Produce     json
-// @Param    		id path int  true  "Customer ID"
-// @Success     200 {object} response.Response{data=response.Data{result=entity.Customer}}
+// @Success     200 {object} response.Response{data=response.Data{result=response.Success()}}
 // @Failure     500 {object} response.FailureResponse
-// @Router      /v1/customers/{id} [get]
-func (r *customerRoutes) get(c *gin.Context) *response.Response {
-	id := cast.ToInt64(c.Param("id"))
-	if id == 0 {
-		err := errors.ErrInvalidCustomerID
+// @Router      /v1/register [post]
+func (r *identityRoutes) register(c *gin.Context) *response.Response {
+	var request AuthenRequest
 
-		return response.Failure(err)
+	if err := c.ShouldBindJSON(&request); err != nil {
+		return response.BadRequest()
 	}
 
-	result, err := r.t.Get(c, id)
+	err := r.u.Register(c.Request.Context(), &entity.AdminUser{Email: request.Email, Password: request.Password})
 	if err != nil {
 		logger.Error(err)
 		err = errors.ErrCustomerNotFound
@@ -72,5 +80,5 @@ func (r *customerRoutes) get(c *gin.Context) *response.Response {
 		return response.Failure(err)
 	}
 
-	return response.SuccessWithData(result)
+	return response.Success()
 }

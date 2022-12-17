@@ -7,20 +7,22 @@
 package di
 
 import (
-	"ecommerce/customer/config"
-	grpc2 "ecommerce/customer/internal/delivery/grpc"
-	"ecommerce/customer/internal/delivery/http"
-	"ecommerce/customer/internal/repository"
-	"ecommerce/customer/internal/usecase"
-	"ecommerce/customer/pkg/grpcserver"
-	"ecommerce/customer/pkg/httpserver"
+	"ecommerce/identity/config"
+	grpc2 "ecommerce/identity/internal/delivery/grpc"
+	"ecommerce/identity/internal/delivery/http"
+	"ecommerce/identity/internal/repository"
+	service "ecommerce/identity/internal/service/jwthelper"
+	"ecommerce/identity/internal/usecase"
+	"ecommerce/identity/pkg/grpcserver"
+	"ecommerce/identity/pkg/httpserver"
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
 	"github.com/uchin-mentorship/ecommerce-go/customer"
 	"google.golang.org/grpc"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"log"
 )
 
 // Injectors from wire.go:
@@ -68,8 +70,8 @@ func InitializeGRPCServer() (*grpcserver.GRPCServer, func(), error) {
 
 var useCaseSet = wire.NewSet(config.NewConfig, provideGormDB, provideCustomerUseCase, provideCustomerRepo)
 
-func provideGRPCCustomerService(u usecase.Customer) customer.CustomerServiceServer {
-	return grpc2.NewCustomerService(u)
+func provideGRPCCustomerService(u usecase.AuthUsecase) customer.CustomerServiceServer {
+	return grpc2.NewIdentityService(u)
 }
 
 func provideGRPCServerOptions() []grpc.ServerOption {
@@ -81,12 +83,12 @@ func provideGRPCServer(cfg *config.Config, server *grpc.Server, delivery custome
 	return grpcserver.New(server, cfg.GRPC.Address)
 }
 
-func provideCustomerRepo(db *gorm.DB) usecase.CustomerRepo {
+func provideCustomerRepo(db *gorm.DB) usecase.AuthRepo {
 	return repository.New(db)
 }
 
-func provideCustomerUseCase(r usecase.CustomerRepo) usecase.Customer {
-	return usecase.NewCustomer(r)
+func provideCustomerUseCase(r repository.AuthRepo,jwt service.JWTHelper) usecase.AuthUsecase {
+	return usecase.NewAuthUsecase(r,jwt)
 }
 
 func provideGormDB(cfg *config.Config) (*gorm.DB, func(), error) {
@@ -98,7 +100,7 @@ func provideGormDB(cfg *config.Config) (*gorm.DB, func(), error) {
 		conn, err := db.DB()
 		if err != nil {
 			log.Printf("failed to get db connection, %v", err)
-			return
+			return 
 		}
 		conn.Close()
 	}, nil

@@ -4,24 +4,24 @@
 package di
 
 import (
-	"ecommerce/customer/config"
-	grpcDelivery "ecommerce/customer/internal/delivery/grpc"
-	"ecommerce/customer/internal/delivery/http"
-	"ecommerce/customer/internal/repository"
-	"ecommerce/customer/internal/usecase"
-	"ecommerce/customer/pkg/grpcserver"
-	"ecommerce/customer/pkg/httpserver"
+	"ecommerce/identity/config"
+	grpcDelivery "ecommerce/identity/internal/delivery/grpc"
+	"ecommerce/identity/internal/delivery/http"
+	"ecommerce/identity/internal/repository"
+	"ecommerce/identity/internal/usecase"
+	"ecommerce/identity/pkg/grpcserver"
+	"ecommerce/identity/pkg/httpserver"
 	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
-	"github.com/uchin-mentorship/ecommerce-go/customer"
+	"github.com/uchin-mentorship/ecommerce-go/identity"
 	"google.golang.org/grpc"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-var useCaseSet = wire.NewSet(config.NewConfig, provideGormDB, provideCustomerUseCase, provideCustomerRepo)
+var useCaseSet = wire.NewSet(config.NewConfig, provideGormDB, provideIdentityUseCase, provideIdentityRepo)
 
 func InitializeHttpServer() (*httpserver.Server, func(), error) {
 	panic(wire.Build(
@@ -38,29 +38,29 @@ func InitializeGRPCServer() (*grpcserver.GRPCServer, func(), error) {
 		grpc.NewServer,
 		provideGRPCServerOptions,
 		provideGRPCServer,
-		provideGRPCCustomerService,
+		provideGRPCIdentityService,
 	))
 }
 
-func provideGRPCCustomerService(u usecase.Customer) customer.CustomerServiceServer {
-	return grpcDelivery.NewCustomerService(u)
+func provideGRPCIdentityService(u usecase.AuthUsecase) identity.IdentityServiceServer {
+	return grpcDelivery.NewIdentityService(u)
 }
 
 func provideGRPCServerOptions() []grpc.ServerOption {
 	return nil
 }
 
-func provideGRPCServer(cfg *config.Config, server *grpc.Server, delivery customer.CustomerServiceServer) *grpcserver.GRPCServer {
-	customer.RegisterCustomerServiceServer(server, delivery)
+func provideGRPCServer(cfg *config.Config, server *grpc.Server, delivery identity.IdentityServiceServer) *grpcserver.GRPCServer {
+	identity.RegisterIdentityServiceServer(server, delivery)
 	return grpcserver.New(server, cfg.GRPC.Address)
 }
 
-func provideCustomerRepo(db *gorm.DB) usecase.CustomerRepo {
+func provideAuthRepo(db *gorm.DB) usecase.AuthRepo {
 	return repository.New(db)
 }
 
-func provideCustomerUseCase(r usecase.CustomerRepo) usecase.Customer {
-	return usecase.NewCustomer(r)
+func provideAuthUseCase(r usecase.AuthRepo) usecase.AuthUsecase {
+	return usecase.NewIdentity(r)
 }
 
 func provideGormDB(cfg *config.Config) (*gorm.DB, func(), error) {

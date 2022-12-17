@@ -3,8 +3,8 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	"ecommerce/customer/internal/app"
-	"ecommerce/customer/pkg/logger"
+	"ecommerce/identity/internal/app"
+	"ecommerce/identity/pkg/logger"
 )
 
 func serveCommand() *cobra.Command {

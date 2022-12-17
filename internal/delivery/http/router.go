@@ -9,13 +9,13 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	v1 "ecommerce/customer/internal/delivery/http/v1"
-	"ecommerce/customer/internal/usecase"
+	v1 "ecommerce/identity/internal/delivery/http/v1"
+	"ecommerce/identity/internal/usecase"
 )
 
 type Router struct {
 	handler *gin.Engine
-	t       usecase.Customer
+	t       usecase.AuthUsecase
 }
 
 func (r *Router) Register() {
@@ -37,7 +37,7 @@ func (r *Router) Register() {
 	v1.RegisterRouter(r.handler.Group("/v1"), r.t)
 }
 
-func NewRouter(handler *gin.Engine, t usecase.Customer) *Router {
+func NewRouter(handler *gin.Engine, t usecase.AuthUsecase) *Router {
 	return &Router{
 		handler: handler,
 		t:       t,
